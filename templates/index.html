@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Senhas Seguras</title>
+    <style>
+        /* Variáveis de Cores (Facilita a alternância de tema no CSS) */
+        :root {
+            /* Padrão: Tema Escuro */
+            --cor-fundo-body: #121212;
+            --cor-fundo-card: #1e1e1e;
+            --cor-texto-principal: #e0e0e0;
+            --cor-titulo: #8ab4f8;
+            --cor-borda-input: #555;
+            --cor-fundo-input: #333;
+            --cor-texto-input: #e0e0e0;
+            --cor-botao-fundo: #8ab4f8;
+            --cor-botao-texto: #1e1e1e;
+            --cor-botao-hover: #6a9de8;
+        }
+
+        /* Regras para o Tema Claro (aplicado via JS) */
+        .light-theme {
+            --cor-fundo-body: #f4f4f9;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #343a40;
+            --cor-titulo: #007bff;
+            --cor-borda-input: #ccc;
+            --cor-fundo-input: #fff;
+            --cor-texto-input: #343a40;
+            --cor-botao-fundo: #007bff;
+            --cor-botao-texto: #ffffff;
+            --cor-botao-hover: #0056b3;
+        }
+
+        /* Aplicação das Variáveis de CSS */
+        body {
+            font-family: sans-serif;
+            background-color: var(--cor-fundo-body);
+            color: var(--cor-texto-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s; /* Transição suave */
+        }
+        .container {
+            background-color: var(--cor-fundo-card);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); 
+            width: 100%;
+            max-width: 450px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        h1 {
+            color: var(--cor-titulo);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* Estilo do botão de tema */
+        #theme-toggle {
+            background: none;
+            border: 1px solid var(--cor-titulo);
+            color: var(--cor-titulo);
+            width: auto;
+            margin-bottom: 20px;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .input-text, .resultado {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--cor-borda-input);
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: var(--cor-fundo-input);
+            color: var(--cor-texto-input);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .resultado {
+            background-color: var(--cor-fundo-input);
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #4CAF50; /* Cor de sucesso (verde) - Mantida constante */
+            color: #4CAF50; 
+            word-wrap: break-word;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--cor-botao-fundo); 
+            color: var(--cor-botao-texto); 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        button:hover {
+            background-color: var(--cor-botao-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Gerador de Senhas</h1>
+        
+        <button id="theme-toggle" onclick="toggleTheme()">Alternar para Tema Claro</button>
+        <div class="form-group">
+            <label for="senha-output">Sua Senha Segura:</label>
+            <p id="senha-output" class="resultado">
+                {% if senha %}
+                    {{ senha }}
+                {% else %}
+                    Clique em Gerar
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="comprimento">Comprimento da Senha:</label>
+                <input type="number" id="comprimento" name="comprimento" class="input-text" 
+                       value="{{ comprimento_atual if comprimento_atual else 12 }}" min="4" max="50" required>
+            </div>
+
+            <div class="form-group checkbox-group" style="flex-direction: column; align-items: flex-start;">
+                <label><input type="checkbox" name="maiusculas" checked> Incluir Letras Maiúsculas (A-Z)</label>
+                <label><input type="checkbox" name="minusculas" checked> Incluir Letras Minúsculas (a-z)</label>
+                <label><input type="checkbox" name="numeros" checked> Incluir Números (0-9)</label>
+                <label><input type="checkbox" name="simbolos" checked> Incluir Símbolos (!@#$...)</label>
+            </div>
+
+            <button type="submit">Gerar Senha!</button>
+        </form>
+    </div>
+
+    <script>
+        // JavaScript para alternar o tema e salvar a preferência
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        function toggleTheme() {
+            const body = document.body;
+            // Verifica se a classe light-theme está presente
+            if (body.classList.contains('light-theme')) {
+                // Se está claro, muda para escuro
+                body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.textContent = 'Alternar para Tema Claro';
+            } else {
+                // Se está escuro, muda para claro
+                body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.textContent = 'Alternar para Tema Escuro';
+            }
+        }
+
+        // Função que carrega o tema salvo ou aplica o padrão
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            
+            // Se não houver tema salvo, ou se o tema salvo for 'dark', não faz nada (mantém o CSS padrão/escuro)
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                themeToggleBtn.textContent = 'Alternar para Tema Escuro';
+            } else {
+                 // Define o texto inicial do botão se o tema for escuro (padrão)
+                 themeToggleBtn.textContent = 'Alternar para Tema Claro';
+            }
+        }
+
+        // Chama a função ao carregar a página
+        window.onload = loadTheme;
+    </script>
+</body>
+</html>
